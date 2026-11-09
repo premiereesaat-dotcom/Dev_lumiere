@@ -1,0 +1,807 @@
+<title>La lumière en régie</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Instrument+Sans:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout : une colonne de lecture type "conduite lumière", sections = "mémoires" numérotés, manipulations sur fond de plateau noir */
+:root{
+  --bg:#0d0e12;        /* plateau éteint */
+  --panel:#16181f;     /* pupitre */
+  --line:#2b2e3b;
+  --fg:#ebe7df;
+  --muted:#9b9cab;
+  --amber:#ffb547;     /* tungstène */
+  --amber-soft:#ffb5471f;
+  --ok:#6fd39a; --ko:#ff7a6b;
+  --f-display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --f-body:"Instrument Sans","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:17px;line-height:1.6;margin:0}
+.wrap{max-width:900px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;line-height:1.15;font-weight:700}
+h1{font-size:clamp(2rem,6vw,3.4rem);margin:0 0 .4em;letter-spacing:-.01em}
+h2{font-size:clamp(1.35rem,3.6vw,1.9rem);margin:0 0 .6em}
+h3{font-size:1.05rem;font-weight:500;margin:1.6em 0 .5em}
+p{max-width:66ch;margin:0 0 1em}
+strong{color:#fff}
+.mono,code{font-family:var(--f-mono);font-size:.9em}
+a{color:var(--amber)}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+/* Bandeau */
+header.hero{padding-block:56px 32px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--f-mono);font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--amber)}
+.hero .lead{font-size:1.15rem;color:var(--fg)}
+.meta{display:flex;flex-wrap:wrap;gap:8px 24px;font-family:var(--f-mono);font-size:.82rem;color:var(--muted);margin-top:20px}
+.spectrum-bar{height:6px;border-radius:3px;margin:26px 0 0;background:linear-gradient(90deg,#7a00c8,#2f3cff 18%,#00b7ff 30%,#00d26a 45%,#e8ff00 58%,#ffb000 68%,#ff4a00 80%,#c80000)}
+
+/* Navigation conduite */
+nav.cue{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+nav.cue ol{list-style:none;display:flex;gap:6px;margin:0;padding-block:10px;overflow-x:auto;scrollbar-width:thin}
+nav.cue a{display:block;white-space:nowrap;text-decoration:none;color:var(--muted);font-family:var(--f-mono);font-size:.78rem;padding:6px 10px;border:1px solid var(--line);border-radius:4px}
+nav.cue a:hover,nav.cue a.on{color:var(--bg);background:var(--amber);border-color:var(--amber)}
+
+/* Sections */
+section.mem{padding-block:56px 24px;border-bottom:1px solid var(--line);scroll-margin-top:60px}
+.memhead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.memno{font-family:var(--f-mono);font-size:.8rem;color:var(--bg);background:var(--amber);padding:2px 8px;border-radius:3px}
+.dur{font-family:var(--f-mono);font-size:.8rem;color:var(--muted)}
+
+.def{border-left:3px solid var(--amber);padding:4px 0 4px 16px;margin:18px 0}
+.def p{margin:0}
+.def b{font-family:var(--f-mono);font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);display:block;margin-bottom:2px}
+
+/* Manipulations */
+.lab{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;margin:22px 0}
+.lab-title{font-family:var(--f-mono);font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.stage{background:#000;border-radius:6px;display:block;width:100%;max-width:100%}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 20px;margin-top:14px}
+.ctl label{display:flex;justify-content:space-between;gap:8px;font-size:.88rem;color:var(--muted)}
+.ctl output{font-family:var(--f-mono);color:var(--fg);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--amber)}
+.btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+button{font:inherit;font-size:.85rem;background:transparent;color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--amber)}
+button.on{background:var(--amber);color:var(--bg);border-color:var(--amber)}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+.readout div{border-top:1px solid var(--line);padding-top:6px}
+.readout small{display:block;font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.readout span{font-family:var(--f-mono);font-size:1.05rem;font-variant-numeric:tabular-nums}
+.note{font-size:.85rem;color:var(--muted);margin-top:10px}
+
+/* Recherches */
+.quest{border:1px dashed var(--amber);border-radius:8px;padding:16px 18px;margin:24px 0;background:var(--amber-soft)}
+.quest .tag{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--amber)}
+.quest h4{font-family:var(--f-body);font-size:1.05rem;margin:4px 0 8px}
+.quest ul{margin:0 0 10px;padding-left:1.2em}
+.quest li{margin-bottom:4px}
+.quest details{margin-bottom:10px}
+.quest summary{cursor:pointer;color:var(--amber);font-size:.9rem}
+.quest textarea{width:100%;min-height:90px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:10px;font:inherit;font-size:.92rem;resize:vertical}
+
+table.ref{border-collapse:collapse;width:100%;font-size:.92rem}
+.tablewrap{overflow-x:auto;margin:14px 0}
+table.ref th,table.ref td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+table.ref th{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:400}
+table.ref td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* objets */
+.objects{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:14px;background:#000;border-radius:6px;padding:20px}
+.obj{text-align:center;font-size:.78rem;color:#aaa}
+.obj i{display:block;width:64px;height:64px;margin:0 auto 6px;border-radius:50%;box-shadow:inset -8px -10px 16px rgba(0,0,0,.45)}
+.obj.sq i{border-radius:6px}
+
+.swatch{display:inline-block;width:1.1em;height:1.1em;border-radius:3px;vertical-align:-.2em;border:1px solid var(--line)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:620px){.two{grid-template-columns:1fr}}
+.two>*{min-width:0}
+
+/* quiz */
+.q{margin:18px 0;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.q p{margin-bottom:6px;font-weight:600}
+.q label{display:block;font-size:.95rem;padding:3px 0;cursor:pointer}
+.q .fb{font-size:.88rem;margin-top:4px}
+.fb.good{color:var(--ok)} .fb.bad{color:var(--ko)}
+footer{padding-block:40px 60px;color:var(--muted);font-size:.85rem}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+
+<header class="hero wrap">
+  <div class="eyebrow">DNMADe Événement · Module à distance · 2 h</div>
+  <h1>La lumière en régie</h1>
+  <p class="lead">De la nature de la lumière jusqu'aux lux mesurés sur un plateau : huit étapes pour comprendre ce que vous réglez quand vous éclairez un événement.</p>
+  <p><strong>Mode d'emploi.</strong> Suivez les étapes dans l'ordre. Dans chaque étape, lisez les définitions, <strong>manipulez les simulations</strong> (curseurs, boutons) et répondez aux encadrés <span style="color:var(--amber)">« À chercher »</span> dans votre carnet. Les recherches sont guidées : déroulez « Pistes » si vous bloquez. Vos réponses restent enregistrées dans ce navigateur. Le module se termine par une auto-évaluation, puis par le <strong>QCM sur Pronote</strong> qui valide votre travail.</p>
+  <div class="meta"><span>8 étapes</span><span>≈ 120 min</span><span>8 recherches guidées</span><span>QCM final sur Pronote</span></div>
+  <div class="spectrum-bar" aria-hidden="true"></div>
+</header>
+
+<nav class="cue" aria-label="Étapes du module">
+  <div class="wrap"><ol id="navlist">
+    <li><a href="#nature">1 · Nature</a></li>
+    <li><a href="#spectre">2 · Spectre & énergie</a></li>
+    <li><a href="#oeil">3 · L'œil</a></li>
+    <li><a href="#additive">4 · Synthèse additive</a></li>
+    <li><a href="#objets">5 · Couleur des objets</a></li>
+    <li><a href="#eclairage">6 · Éclairer un objet</a></li>
+    <li><a href="#temperature">7 · Température</a></li>
+    <li><a href="#photometrie">8 · lm · cd · lx</a></li>
+    <li><a href="#bilan">Bilan</a></li>
+  </ol></div>
+</nav>
+
+<main class="wrap">
+
+<!-- 1 -->
+<section class="mem" id="nature">
+  <div class="memhead"><span class="memno">MÉM. 1</span><span class="dur">≈ 15 min</span></div>
+  <h2>Onde ou particule ? Les deux.</h2>
+  <p>Pendant trois siècles, les physiciens se sont disputés : la lumière est-elle une <strong>onde</strong> (comme les vagues) ou un flux de <strong>particules</strong> (comme des billes) ? La réponse moderne : elle se comporte comme l'une ou l'autre selon l'expérience qu'on fait. On parle de <strong>dualité onde-corpuscule</strong>.</p>
+  <div class="def"><b>Modèle ondulatoire</b><p>La lumière est une onde électromagnétique : une oscillation d'un champ électrique et d'un champ magnétique qui se propage, même dans le vide, à environ <span class="mono">300 000 km/s</span>. Ce modèle explique les interférences, la diffraction, les reflets irisés d'une bulle de savon.</p></div>
+  <div class="def"><b>Modèle particulaire</b><p>La lumière est faite de grains d'énergie appelés <strong>photons</strong>. Chaque photon transporte une quantité d'énergie fixe, qui dépend de sa couleur. Ce modèle explique comment fonctionnent les capteurs photo, les panneaux solaires ou pourquoi les UV brûlent la peau.</p></div>
+
+  <div class="lab">
+    <div class="lab-title">Manipulation · deux façons de voir le même rayon</div>
+    <canvas id="waveCv" class="stage" height="200" aria-label="Animation d'une onde lumineuse"></canvas>
+    <div class="btns" role="group" aria-label="Modèle affiché">
+      <button id="mWave" class="on">Voir comme une onde</button>
+      <button id="mPhot">Voir comme des photons</button>
+      <button id="mPause">Pause</button>
+    </div>
+    <div class="controls">
+      <div class="ctl"><label for="wl1">Longueur d'onde λ <output id="wl1o">550 nm</output></label><input id="wl1" type="range" min="380" max="780" value="550"></div>
+    </div>
+    <p class="note">Observez : quand λ diminue, les crêtes se rapprochent (onde) et les photons « frappent » plus fort (ils sont dessinés plus brillants et plus nerveux). La couleur dépend de λ.</p>
+  </div>
+
+  <div class="quest">
+    <span class="tag">À chercher · R1</span>
+    <h4>Qui a fait pencher la balance, et comment ?</h4>
+    <ul>
+      <li>Quelle expérience réalisée par Thomas Young vers 1801 a prouvé le caractère ondulatoire de la lumière ? Décrivez-la en deux phrases.</li>
+      <li>Quel phénomène Albert Einstein a-t-il expliqué en 1905 grâce aux photons (et qui lui a valu le prix Nobel) ?</li>
+    </ul>
+    <details><summary>Pistes</summary><p>Mots-clés : « fentes de Young », « interférences lumineuses », « effet photoélectrique Einstein ». Les sites de vulgarisation scientifique (CNRS Le journal, Futura Sciences, Wikipédia) suffisent.</p></details>
+    <textarea id="r1" aria-label="Réponse R1" placeholder="Votre réponse…"></textarea>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="mem" id="spectre">
+  <div class="memhead"><span class="memno">MÉM. 2</span><span class="dur">≈ 15 min</span></div>
+  <h2>Longueur d'onde, couleur, énergie</h2>
+  <p>La <strong>longueur d'onde λ</strong> est la distance entre deux crêtes de l'onde. Pour la lumière visible, elle va d'environ <span class="mono">380 nm</span> (violet) à <span class="mono">780 nm</span> (rouge). Un nanomètre vaut un milliardième de mètre. En dehors de cette plage, la lumière existe toujours mais notre œil ne la voit pas : <strong>ultraviolets</strong> (UV) en dessous, <strong>infrarouges</strong> (IR) au-dessus.</p>
+  <div class="def"><b>Énergie d'un photon</b><p>Plus la longueur d'onde est courte, plus chaque photon transporte d'énergie : <span class="mono">E = h·c / λ</span>. Concrètement, un photon violet porte presque deux fois plus d'énergie qu'un photon rouge. C'est pour ça que les UV abîment la peau, décolorent les tissus et les affiches, alors que l'IR « seulement » chauffe.</p></div>
+
+  <div class="lab">
+    <div class="lab-title">Manipulation · balayez le spectre</div>
+    <canvas id="specCv" class="stage" height="120" aria-label="Spectre électromagnétique avec curseur"></canvas>
+    <div class="controls">
+      <div class="ctl"><label for="wl2">Longueur d'onde λ <output id="wl2o">550 nm</output></label><input id="wl2" type="range" min="200" max="1100" value="550"></div>
+    </div>
+    <div class="readout">
+      <div><small>Domaine</small><span id="sDom">Visible · vert</span></div>
+      <div><small>Fréquence</small><span id="sFreq">545 THz</span></div>
+      <div><small>Énergie / photon</small><span id="sEn">2,25 eV</span></div>
+      <div><small>Vs photon rouge 700 nm</small><span id="sRel">×1,27</span></div>
+    </div>
+    <p class="note">L'électron-volt (eV) est une unité d'énergie adaptée aux photons. 1 THz = mille milliards d'oscillations par seconde.</p>
+  </div>
+
+  <div class="quest">
+    <span class="tag">À chercher · R2</span>
+    <h4>UV et IR dans l'événementiel</h4>
+    <ul>
+      <li>Qu'est-ce que la « lumière noire » (black light) utilisée en soirée ? Pourquoi certains textiles, peintures ou boissons (eau tonique) semblent-ils briller dessous ? Cherchez le mot « fluorescence ».</li>
+      <li>Pourquoi les vieux projecteurs halogènes chauffaient-ils autant, alors que les LED chauffent beaucoup moins devant elles ? Quel lien avec les infrarouges ?</li>
+    </ul>
+    <details><summary>Pistes</summary><p>Mots-clés : « lampe UV-A Wood fluorescence », « rendement lumineux halogène infrarouge », « LED efficacité lumineuse lm/W ».</p></details>
+    <textarea id="r2" aria-label="Réponse R2" placeholder="Votre réponse…"></textarea>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="mem" id="oeil">
+  <div class="memhead"><span class="memno">MÉM. 3</span><span class="dur">≈ 15 min</span></div>
+  <h2>Comment l'œil fabrique une couleur</h2>
+  <p>La couleur n'est pas dans la lumière : elle est <strong>construite par notre système visuel</strong>. Au fond de l'œil, la rétine contient deux familles de capteurs.</p>
+  <div class="two">
+    <div class="def"><b>Bâtonnets</b><p>Environ 120 millions. Très sensibles, ils servent dans la pénombre mais ne distinguent pas les couleurs. D'où le fait que « la nuit, tous les chats sont gris ».</p></div>
+    <div class="def"><b>Cônes</b><p>Environ 6 millions, concentrés au centre. Trois types : <span class="swatch" style="background:#4060ff"></span> S (courtes λ), <span class="swatch" style="background:#40c040"></span> M (moyennes), <span class="swatch" style="background:#ff4030"></span> L (longues).</p></div>
+  </div>
+  <p>Chaque lumière excite les trois types de cônes dans des proportions différentes. Le cerveau <strong>compare les trois signaux</strong> et en déduit une couleur. C'est la vision <strong>trichromatique</strong>, et c'est elle qui rend possible la synthèse additive de l'étape suivante.</p>
+
+  <div class="lab">
+    <div class="lab-title">Manipulation · réponse des trois cônes</div>
+    <canvas id="coneCv" class="stage" height="230" aria-label="Courbes de sensibilité des cônes"></canvas>
+    <div class="controls">
+      <div class="ctl"><label for="wl3">Lumière monochromatique λ <output id="wl3o">580 nm</output></label><input id="wl3" type="range" min="390" max="700" value="580"></div>
+    </div>
+    <div class="readout">
+      <div><small>Cônes S</small><span id="cS">0 %</span></div>
+      <div><small>Cônes M</small><span id="cM">0 %</span></div>
+      <div><small>Cônes L</small><span id="cL">0 %</span></div>
+      <div><small>Couleur perçue</small><span id="cCol">jaune</span></div>
+    </div>
+    <p class="note">Placez le curseur vers 580 nm : M et L répondent fort, S presque pas. Le cerveau dit « jaune ». Retenez ce couple M+L, il ressert à l'étape 4. (Courbes simplifiées.)</p>
+  </div>
+
+  <div class="quest">
+    <span class="tag">À chercher · R3</span>
+    <h4>Quand la vision change</h4>
+    <ul>
+      <li>Qu'est-ce que le daltonisme ? Quel type de cône est touché dans la forme la plus fréquente, et quelle proportion d'hommes est concernée environ ?</li>
+      <li>Quelle conséquence pour vous, concepteurs : citez une situation d'événement où un code couleur rouge/vert pose problème (signalétique, plan d'accès, conduite…).</li>
+    </ul>
+    <details><summary>Pistes</summary><p>Mots-clés : « deutéranomalie », « protanopie », « daltonisme pourcentage hommes femmes », « simulateur daltonisme ».</p></details>
+    <textarea id="r3" aria-label="Réponse R3" placeholder="Votre réponse…"></textarea>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="mem" id="additive">
+  <div class="memhead"><span class="memno">MÉM. 4</span><span class="dur">≈ 15 min</span></div>
+  <h2>La synthèse additive</h2>
+  <p>Puisque l'œil n'a que trois types de cônes, on peut le tromper : en <strong>additionnant</strong> trois lumières <span class="swatch" style="background:#f00"></span> rouge, <span class="swatch" style="background:#0f0"></span> verte et <span class="swatch" style="background:#00f"></span> bleue en proportions choisies, on recrée presque toutes les couleurs. C'est le principe des écrans, des vidéoprojecteurs et des projecteurs LED RGB.</p>
+  <div class="def"><b>Règle</b><p>R + V = <strong>jaune</strong> · V + B = <strong>cyan</strong> · R + B = <strong>magenta</strong> · R + V + B = <strong>blanc</strong>. Plus on ajoute de lumière, plus c'est clair. Sur noir et sans lumière : noir.</p></div>
+
+  <div class="lab">
+    <div class="lab-title">Manipulation · trois projecteurs sur un cyclo noir</div>
+    <canvas id="addCv" class="stage" height="320" aria-label="Trois faisceaux colorés superposés"></canvas>
+    <div class="controls">
+      <div class="ctl"><label for="aR">Projecteur rouge <output id="aRo">100 %</output></label><input id="aR" type="range" min="0" max="100" value="100"></div>
+      <div class="ctl"><label for="aG">Projecteur vert <output id="aGo">100 %</output></label><input id="aG" type="range" min="0" max="100" value="100"></div>
+      <div class="ctl"><label for="aB">Projecteur bleu <output id="aBo">100 %</output></label><input id="aB" type="range" min="0" max="100" value="100"></div>
+      <div class="ctl"><label for="aS">Écartement des faisceaux <output id="aSo">50 %</output></label><input id="aS" type="range" min="0" max="100" value="50"></div>
+    </div>
+    <div class="readout">
+      <div><small>Mélange au centre</small><span id="aMix">blanc</span></div>
+      <div><small>Valeur RVB</small><span id="aVal">255 · 255 · 255</span></div>
+    </div>
+    <p class="note">Défis : obtenez un orange chaud, un rose pâle, un bleu turquoise. Puis rapprochez complètement les faisceaux (écartement 0 %).</p>
+  </div>
+
+  <div class="quest">
+    <span class="tag">À chercher · R4</span>
+    <h4>Additif contre soustractif</h4>
+    <ul>
+      <li>Quelle est la différence entre synthèse additive (lumières) et synthèse soustractive (encres, peintures, filtres) ? Quelles sont les trois couleurs primaires de la synthèse soustractive ?</li>
+      <li>Sur un projecteur traditionnel, on colore la lumière avec une <em>gélatine</em> (filtre). Additive ou soustractive ? Pourquoi un projecteur équipé d'une gélatine bleu foncé éclaire-t-il beaucoup moins ?</li>
+      <li>Les projecteurs LED récents sont souvent « RGBW » ou « RGBAL ». À quoi servent les LED W, A (ambre) ou L (lime) ajoutées ?</li>
+    </ul>
+    <details><summary>Pistes</summary><p>Mots-clés : « synthèse soustractive CMJ », « filtre gélatine Lee Rosco transmission », « projecteur LED RGBW RGBAL intérêt ».</p></details>
+    <textarea id="r4" aria-label="Réponse R4" placeholder="Votre réponse…"></textarea>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="mem" id="objets">
+  <div class="memhead"><span class="memno">MÉM. 5</span><span class="dur">≈ 15 min</span></div>
+  <h2>La couleur des objets</h2>
+  <p>Un objet n'émet pas de lumière : il <strong>renvoie</strong> (diffuse) une partie de celle qu'il reçoit et <strong>absorbe</strong> le reste. Une tomate est rouge parce qu'elle absorbe le vert et le bleu et renvoie surtout le rouge.</p>
+  <div class="def"><b>Conséquence directe</b><p>La couleur perçue d'un objet = ce que la source envoie <em>×</em> ce que l'objet renvoie. Si la lumière ne contient pas la couleur que l'objet sait renvoyer, l'objet paraît <strong>sombre, voire noir</strong>. Un costume rouge sous un éclairage vert devient noir.</p></div>
+
+  <div class="lab">
+    <div class="lab-title">Manipulation · changez la lumière, regardez les objets</div>
+    <div class="objects" id="objs"></div>
+    <div class="btns" id="lightPresets" role="group" aria-label="Couleur de la lumière"></div>
+    <div class="controls">
+      <div class="ctl"><label for="oR">Lumière · rouge <output id="oRo">100 %</output></label><input id="oR" type="range" min="0" max="100" value="100"></div>
+      <div class="ctl"><label for="oG">Lumière · vert <output id="oGo">100 %</output></label><input id="oG" type="range" min="0" max="100" value="100"></div>
+      <div class="ctl"><label for="oB">Lumière · bleu <output id="oBo">100 %</output></label><input id="oB" type="range" min="0" max="100" value="100"></div>
+    </div>
+    <p class="note">Essayez : lumière verte sur la tomate · lumière bleue sur le citron · lumière rouge sur la nappe blanche. Modèle simplifié à 3 composantes : les vrais objets et les vraies sources ont des spectres continus.</p>
+  </div>
+
+  <div class="quest">
+    <span class="tag">À chercher · R5</span>
+    <h4>Le piège des essayages</h4>
+    <ul>
+      <li>Expliquez pourquoi un tissu choisi en boutique peut changer de couleur une fois sur scène ou sous un éclairage d'ambiance. Cherchez le terme « métamérisme ».</li>
+      <li>Proposez une règle simple pour une équipe déco/costume avant un événement.</li>
+    </ul>
+    <details><summary>Pistes</summary><p>Mots-clés : « métamérisme couleur textile », « cabine de lumière contrôle couleur ».</p></details>
+    <textarea id="r5" aria-label="Réponse R5" placeholder="Votre réponse…"></textarea>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="mem" id="eclairage">
+  <div class="memhead"><span class="memno">MÉM. 6</span><span class="dur">≈ 10 min</span></div>
+  <h2>Éclairer un objet : direction et qualité</h2>
+  <p>Au-delà de la couleur, deux paramètres façonnent la lecture d'un objet ou d'un visage : la <strong>direction</strong> de la lumière et sa <strong>qualité</strong> (dure ou diffuse).</p>
+  <div class="two">
+    <div class="def"><b>Ombre propre / ombre portée</b><p>L'ombre propre est la partie de l'objet non éclairée. L'ombre portée est l'ombre projetée par l'objet sur une autre surface.</p></div>
+    <div class="def"><b>Lumière dure / diffuse</b><p>Source petite et lointaine : ombres nettes, contraste fort (découpe, soleil). Source large ou diffusée : ombres douces, modelé doux (softbox, ciel nuageux).</p></div>
+  </div>
+
+  <div class="lab">
+    <div class="lab-title">Manipulation · une sphère, un projecteur</div>
+    <canvas id="sphCv" class="stage" height="260" aria-label="Sphère éclairée"></canvas>
+    <div class="btns" id="sphPresets" role="group" aria-label="Positions classiques">
+      <button data-a="0" data-e="20">Face</button>
+      <button data-a="45" data-e="40">¾ (45°)</button>
+      <button data-a="90" data-e="10">Latéral</button>
+      <button data-a="165" data-e="35">Contre-jour</button>
+      <button data-a="0" data-e="85">Douche</button>
+      <button data-a="0" data-e="-45">Contre-plongée</button>
+    </div>
+    <div class="controls">
+      <div class="ctl"><label for="sA">Angle horizontal <output id="sAo">45°</output></label><input id="sA" type="range" min="-180" max="180" value="45"></div>
+      <div class="ctl"><label for="sE">Hauteur <output id="sEo">40°</output></label><input id="sE" type="range" min="-60" max="90" value="40"></div>
+      <div class="ctl"><label for="sD">Diffusion <output id="sDo">20 %</output></label><input id="sD" type="range" min="0" max="100" value="20"></div>
+    </div>
+    <p class="note">Angle horizontal 0° = projecteur dans l'axe du public ; 180° = derrière l'objet. Notez l'effet « inquiétant » de la contre-plongée et le détourage du contre-jour.</p>
+  </div>
+
+  <div class="quest">
+    <span class="tag">À chercher · R6</span>
+    <h4>L'éclairage en trois points</h4>
+    <ul>
+      <li>Qu'appelle-t-on l'éclairage en trois points (key light, fill light, back light) ? Donnez le rôle de chaque source.</li>
+      <li>Pour un pupitre de conférence, où placeriez-vous les projecteurs de face pour éviter que l'orateur soit ébloui et que ses yeux soient dans l'ombre ?</li>
+    </ul>
+    <details><summary>Pistes</summary><p>Mots-clés : « éclairage trois points », « angle 45° face scène », « éclairage visage conférence ombre orbites ».</p></details>
+    <textarea id="r6" aria-label="Réponse R6" placeholder="Votre réponse…"></textarea>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="mem" id="temperature">
+  <div class="memhead"><span class="memno">MÉM. 7</span><span class="dur">≈ 15 min</span></div>
+  <h2>Température de couleur</h2>
+  <p>Un métal chauffé devient d'abord rouge, puis orange, jaune, blanc, et bleuté s'il pouvait chauffer encore. La <strong>température de couleur</strong>, exprimée en <strong>kelvins (K)</strong>, décrit la teinte d'une lumière « blanche » en la comparant à ce corps chauffé.</p>
+  <div class="def"><b>Le paradoxe à retenir</b><p>Bas kelvins (1 800 à 3 000 K) = lumière <strong>chaude</strong>, orangée. Hauts kelvins (5 500 à 10 000 K) = lumière <strong>froide</strong>, bleutée. Le vocabulaire « chaud / froid » décrit l'ambiance ressentie, à l'inverse de la température physique.</p></div>
+
+  <div class="lab">
+    <div class="lab-title">Manipulation · la même table sous différentes sources</div>
+    <div class="objects" id="tScene"></div>
+    <div class="controls">
+      <div class="ctl"><label for="tK">Température de couleur <output id="tKo">3 200 K</output></label><input id="tK" type="range" min="1800" max="10000" step="100" value="3200"></div>
+      <div class="ctl"><label for="tAd">Compensation de la dominante <output id="tAdo">0 %</output></label><input id="tAd" type="range" min="0" max="100" value="0">
+        <div style="display:flex;justify-content:space-between;gap:8px;font-size:.75rem;color:var(--muted)"><span>0 % : caméra non réglée</span><span>100 % : œil habitué</span></div></div>
+    </div>
+    <div class="btns" id="tPresets" role="group" aria-label="Sources de référence">
+      <button data-k="1900">Bougie</button>
+      <button data-k="2700">Ampoule chaude</button>
+      <button data-k="3200">Halogène de scène</button>
+      <button data-k="4000">LED neutre</button>
+      <button data-k="5600">Soleil / HMI</button>
+      <button data-k="6500">Ciel couvert</button>
+      <button data-k="9000">Ombre ciel bleu</button>
+    </div>
+    <div class="readout">
+      <div><small>Teinte de la source</small><span><i id="tSw" class="swatch"></i> <span id="tName">chaude</span></span></div>
+    </div>
+    <p class="note"><strong>À quoi sert le second curseur ?</strong> Il simule l'<strong>adaptation chromatique</strong>. À 0 %, vous voyez la lumière telle qu'elle est physiquement, comme une caméra réglée une fois pour toutes sur la lumière du jour : sous une bougie, la nappe blanche paraît orange. À 100 %, vous voyez ce que perçoit un œil habitué depuis quelques minutes à cette lumière : le cerveau corrige la dominante et la nappe redevient blanche. La « balance des blancs » d'une caméra fait la même correction, mais seulement si on la règle.<br><strong>Essayez :</strong> choisissez « Bougie », laissez la compensation à 0 %, puis montez-la doucement jusqu'à 100 %. Recommencez avec « Ombre ciel bleu ». Dans la réalité, l'œil compense en partie seulement : l'ambiance d'un dîner aux bougies reste chaude.</p>
+  </div>
+
+  <div class="quest">
+    <span class="tag">À chercher · R7</span>
+    <h4>Mélanger les sources sur un même événement</h4>
+    <ul>
+      <li>Que se passe-t-il, à l'œil et à la caméra, quand un plateau mélange des projecteurs à 3 200 K et une baie vitrée en plein jour ? Quelle gélatine (CTB ou CTO) utilise-t-on pour harmoniser ?</li>
+      <li>Qu'est-ce que l'IRC (indice de rendu des couleurs, ou CRI) ? Pourquoi une LED bon marché à IRC 70 rend-elle les visages ternes, même à la bonne température ?</li>
+    </ul>
+    <details><summary>Pistes</summary><p>Mots-clés : « gélatine CTO CTB conversion », « balance des blancs vidéo », « IRC CRI Ra 90 éclairage scène ».</p></details>
+    <textarea id="r7" aria-label="Réponse R7" placeholder="Votre réponse…"></textarea>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="mem" id="photometrie">
+  <div class="memhead"><span class="memno">MÉM. 8</span><span class="dur">≈ 20 min</span></div>
+  <h2>Lumen, candela, lux</h2>
+  <p>Trois unités reviennent sans cesse sur les fiches techniques. Elles mesurent trois choses différentes. Une image aide : un <strong>arrosoir</strong>.</p>
+  <div class="tablewrap"><table class="ref">
+    <thead><tr><th>Grandeur</th><th>Unité</th><th>Ce qu'elle mesure</th><th>Arrosoir</th></tr></thead>
+    <tbody>
+      <tr><td>Flux lumineux Φ</td><td class="n">lumen (lm)</td><td>Quantité totale de lumière émise par la source, dans toutes les directions.</td><td>Litres d'eau qui sortent par seconde.</td></tr>
+      <tr><td>Intensité lumineuse I</td><td class="n">candela (cd)</td><td>Lumière envoyée dans une direction donnée (par unité d'angle solide, le stéradian).</td><td>Force du jet dans une direction. Pomme fine = jet puissant.</td></tr>
+      <tr><td>Éclairement E</td><td class="n">lux (lx)</td><td>Lumière reçue par une surface : 1 lx = 1 lm/m².</td><td>Quantité d'eau reçue par m² de plate-bande.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="def"><b>Deux relations utiles</b><p>Concentrer le faisceau (angle plus fermé) ne crée pas de lumière : à lumens égaux, les <strong>candelas augmentent</strong>. Et l'éclairement diminue avec le <strong>carré de la distance</strong> : <span class="mono">E = I / d²</span>. Deux fois plus loin, quatre fois moins de lux.</p></div>
+
+  <div class="lab">
+    <div class="lab-title">Manipulation · un projecteur, une surface</div>
+    <svg id="phSvg" class="stage" viewBox="0 0 640 260" role="img" aria-label="Vue de profil du faisceau"></svg>
+    <div class="controls">
+      <div class="ctl"><label for="pF">Flux du faisceau <output id="pFo">3 000 lm</output></label><input id="pF" type="range" min="100" max="20000" step="100" value="3000"></div>
+      <div class="ctl"><label for="pA">Angle du faisceau <output id="pAo">25°</output></label><input id="pA" type="range" min="4" max="70" value="25"></div>
+      <div class="ctl"><label for="pD">Distance à la surface <output id="pDo">6 m</output></label><input id="pD" type="range" min="1" max="20" step="0.5" value="6"></div>
+    </div>
+    <div class="readout">
+      <div><small>Intensité au centre</small><span id="pI">—</span></div>
+      <div><small>Éclairement au centre</small><span id="pE">—</span></div>
+      <div><small>Diamètre de la tache</small><span id="pDia">—</span></div>
+      <div><small>Comparable à</small><span id="pCmp">—</span></div>
+    </div>
+    <canvas id="luxCv" class="stage" height="90" aria-label="Échelle des éclairements" style="margin-top:14px"></canvas>
+    <p class="note">Modèle simplifié : tout le flux est réparti uniformément dans le cône. Testez : (1) gardez les lumens, fermez l'angle de 50° à 10° ; (2) doublez la distance de 5 à 10 m ; (3) cherchez quel réglage donne environ 500 lx, le niveau d'un bureau.</p>
+  </div>
+
+  <h3>Ordres de grandeur</h3>
+  <div class="tablewrap"><table class="ref">
+    <thead><tr><th>Situation</th><th>Éclairement typique</th></tr></thead>
+    <tbody>
+      <tr><td>Nuit de pleine lune</td><td class="n">≈ 0,2 lx</td></tr>
+      <tr><td>Rue éclairée la nuit</td><td class="n">10 à 30 lx</td></tr>
+      <tr><td>Salon d'habitation</td><td class="n">100 à 200 lx</td></tr>
+      <tr><td>Bureau, salle de classe</td><td class="n">300 à 500 lx</td></tr>
+      <tr><td>Stand de salon, vitrine</td><td class="n">1 000 à 3 000 lx</td></tr>
+      <tr><td>Ciel couvert de jour</td><td class="n">≈ 10 000 lx</td></tr>
+      <tr><td>Plein soleil d'été</td><td class="n">jusqu'à 100 000 lx</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="quest">
+    <span class="tag">À chercher · R8</span>
+    <h4>Lire une vraie fiche technique</h4>
+    <ul>
+      <li>Trouvez la fiche technique (datasheet) d'un projecteur de scène LED (découpe, PAR, wash…) d'une marque de votre choix. Relevez : flux en lumens, angle(s) de faisceau, puissance électrique en watts, température de couleur, IRC.</li>
+      <li>Cherchez dans la fiche le tableau ou schéma photométrique (lux à 5 m, 10 m…). Vérifiez que l'éclairement est bien divisé par 4 quand la distance double.</li>
+      <li>Bonus : installez une application de luxmètre sur votre téléphone et mesurez l'éclairement à votre bureau, puis près d'une fenêtre.</li>
+    </ul>
+    <details><summary>Pistes</summary><p>Mots-clés : nom de la marque + « datasheet pdf » ou « fiche technique ». Cherchez les sections « Photometrics », « Photométrie », « lux @ 5m ». L'efficacité lumineuse se calcule en lm/W.</p></details>
+    <textarea id="r8" aria-label="Réponse R8" placeholder="Votre réponse…"></textarea>
+  </div>
+</section>
+
+<!-- Bilan -->
+<section class="mem" id="bilan">
+  <div class="memhead"><span class="memno">FIN</span><span class="dur">≈ 5 min</span></div>
+  <h2>Auto-évaluation, puis Pronote</h2>
+  <p>Ces questions ne sont pas notées. Elles vous indiquent si vous êtes prêt·e pour le QCM de validation sur Pronote. En cas d'erreur, relisez l'étape indiquée.</p>
+  <div id="quiz"></div>
+  <button id="quizBtn">Vérifier mes réponses</button>
+  <p id="quizScore" class="note" aria-live="polite"></p>
+
+  <h3>Votre carnet de recherche</h3>
+  <p>Vos réponses aux huit recherches sont conservées dans ce navigateur. Copiez-les pour les garder dans vos notes ou les rendre si cela vous est demandé.</p>
+  <div class="btns"><button id="copyBtn">Copier tout mon carnet</button></div>
+  <textarea id="carnetOut" class="note" readonly hidden style="width:100%;min-height:160px;margin-top:10px;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:10px"></textarea>
+  <p id="copyMsg" class="note" aria-live="polite"></p>
+
+  <div class="quest" style="border-style:solid">
+    <span class="tag">Dernière étape</span>
+    <h4>Connectez-vous à Pronote et faites le QCM « La lumière ».</h4>
+    <p style="margin:0">Il valide la consultation de ce module.</p>
+  </div>
+</section>
+</main>
+
+<footer class="wrap">ÉSAAT Roubaix · DNMADe Événement · Module « La lumière », travail à distance.</footer>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const fr=(n,d=0)=>n.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d});
+
+/* ---------- utilitaires couleur ---------- */
+function wl2rgb(l){
+  let r=0,g=0,b=0;
+  if(l>=380&&l<440){r=-(l-440)/60;b=1}
+  else if(l>=440&&l<490){g=(l-440)/50;b=1}
+  else if(l>=490&&l<510){g=1;b=-(l-510)/20}
+  else if(l>=510&&l<580){r=(l-510)/70;g=1}
+  else if(l>=580&&l<645){r=1;g=-(l-645)/65}
+  else if(l>=645&&l<=780){r=1}
+  let f=0;
+  if(l>=380&&l<420)f=.3+.7*(l-380)/40;
+  else if(l>=420&&l<701)f=1;
+  else if(l>=701&&l<=780)f=.3+.7*(780-l)/80;
+  const c=v=>Math.round(255*Math.pow(v*f,.8));
+  return [c(r),c(g),c(b)];
+}
+const rgbStr=a=>`rgb(${a[0]},${a[1]},${a[2]})`;
+function wlName(l){
+  if(l<380)return 'ultraviolet (invisible)';
+  if(l<450)return 'violet';if(l<495)return 'bleu';if(l<570)return 'vert';
+  if(l<590)return 'jaune';if(l<620)return 'orange';if(l<=780)return 'rouge';
+  return 'infrarouge (invisible)';
+}
+function fitCanvas(cv){
+  const dpr=window.devicePixelRatio||1, w=cv.clientWidth, h=+cv.getAttribute('height');
+  cv.style.height=h+'px'; cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  const ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,w,h};
+}
+function bindRange(id,fmt,cb){
+  const el=$(id),o=$(id+'o');
+  const up=()=>{o.textContent=fmt(+el.value);cb&&cb()};
+  el.addEventListener('input',up); o.textContent=fmt(+el.value); return el;
+}
+
+/* ---------- 1. onde / photons ---------- */
+const waveCv=$('waveCv'); let wave=fitCanvas(waveCv), mode='wave', paused=reduce, t=0;
+const photons=[];
+const wl1=bindRange('wl1',v=>v+' nm');
+function setMode(m){mode=m;$('mWave').classList.toggle('on',m==='wave');$('mPhot').classList.toggle('on',m==='phot')}
+$('mWave').onclick=()=>setMode('wave');$('mPhot').onclick=()=>setMode('phot');
+$('mPause').onclick=()=>{paused=!paused;$('mPause').textContent=paused?'Lecture':'Pause';if(!paused)loop()};
+if(paused)$('mPause').textContent='Lecture';
+function drawWave(){
+  const {ctx,w,h}=wave, l=+wl1.value, col=wl2rgb(l), mid=h/2;
+  ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle='#2b2e3b';ctx.beginPath();ctx.moveTo(0,mid);ctx.lineTo(w,mid);ctx.stroke();
+  const px=l/3.2;
+  if(mode==='wave'){
+    ctx.strokeStyle=rgbStr(col);ctx.lineWidth=3;ctx.shadowColor=rgbStr(col);ctx.shadowBlur=12;
+    ctx.beginPath();
+    for(let x=0;x<=w;x+=2){const y=mid-60*Math.sin(2*Math.PI*(x-t)/px);x?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+    ctx.stroke();ctx.shadowBlur=0;
+    // repère λ
+    const x0=((t%px)+px)%px+px*0.25+20;
+    ctx.strokeStyle='#9b9cab';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(x0,mid-75);ctx.lineTo(x0,mid+70);ctx.moveTo(x0+px,mid-75);ctx.lineTo(x0+px,mid+70);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#ebe7df';ctx.font='12px JetBrains Mono, monospace';ctx.textAlign='center';
+    ctx.fillText('λ = '+l+' nm',x0+px/2,mid+88);
+    ctx.beginPath();ctx.moveTo(x0,mid+76);ctx.lineTo(x0+px,mid+76);ctx.stroke();
+  }else{
+    const e=1240/l, speed=2+ (e-1.6)*2.2;
+    if(!paused&&Math.random()<0.25)photons.push({x:-10,y:mid+(Math.random()-.5)*110});
+    for(let i=photons.length-1;i>=0;i--){
+      const p=photons[i]; if(!paused)p.x+=speed*1.6; if(p.x>w+20){photons.splice(i,1);continue}
+      const r=3+ (e-1.6)*2.5, g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,r*4);
+      g.addColorStop(0,'#fff');g.addColorStop(.25,rgbStr(col));g.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(p.x,p.y,r*4,0,7);ctx.fill();
+    }
+    ctx.fillStyle='#ebe7df';ctx.font='12px JetBrains Mono, monospace';ctx.textAlign='left';
+    ctx.fillText('énergie par photon : '+fr(e,2)+' eV',12,20);
+  }
+}
+function loop(){ if(!paused)t+=1.2; drawWave(); if(!paused)requestAnimationFrame(loop) }
+wl1.addEventListener('input',()=>{if(paused)drawWave()});
+$('mWave').addEventListener('click',()=>{if(paused)drawWave()});$('mPhot').addEventListener('click',()=>{if(paused){photons.length=0;for(let i=0;i<25;i++)photons.push({x:Math.random()*wave.w,y:wave.h/2+(Math.random()-.5)*110});drawWave()}});
+loop(); if(paused)drawWave();
+
+/* ---------- 2. spectre ---------- */
+const specCv=$('specCv'); let spec=fitCanvas(specCv);
+const wl2=bindRange('wl2',v=>v+' nm',drawSpec);
+function drawSpec(){
+  const {ctx,w,h}=spec, l=+wl2.value, x=v=>(v-200)/900*w;
+  ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);
+  for(let v=200;v<=1100;v+=1){
+    let c=wl2rgb(v); if(v<380)c=[40,20,60]; if(v>780)c=[60,18,18];
+    ctx.fillStyle=rgbStr(c);ctx.fillRect(x(v),30,Math.ceil(w/900)+1,46);
+  }
+  ctx.fillStyle='#9b9cab';ctx.font='11px JetBrains Mono, monospace';ctx.textAlign='center';
+  ctx.fillText('UV',x(290),22);ctx.fillText('VISIBLE',x(580),22);ctx.fillText('IR',x(940),22);
+  [200,380,500,600,780,1000].forEach(v=>{ctx.fillText(v,x(v),96);ctx.fillRect(x(v),78,1,6)});
+  ctx.fillText('nm',w-14,96);
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(x(l),28);ctx.lineTo(x(l)-6,16);ctx.lineTo(x(l)+6,16);ctx.fill();
+  ctx.fillRect(x(l)-1,30,2,46);
+  const f=3e8/(l*1e-9)/1e12, e=1240/l;
+  $('sDom').textContent=l<380?'Ultraviolet':l>780?'Infrarouge':'Visible · '+wlName(l);
+  $('sFreq').textContent=fr(f)+' THz';
+  $('sEn').textContent=fr(e,2)+' eV';
+  $('sRel').textContent='×'+fr(700/l,2);
+}
+
+/* ---------- 3. cônes ---------- */
+const coneCv=$('coneCv'); let cone=fitCanvas(coneCv);
+const G=(l,m,s)=>Math.exp(-.5*((l-m)/s)**2);
+const cones=[{k:'S',m:445,s:24,c:'#4a6bff'},{k:'M',m:540,s:40,c:'#45c45a'},{k:'L',m:566,s:46,c:'#ff4d3d'}];
+const wl3=bindRange('wl3',v=>v+' nm',drawCone);
+function drawCone(){
+  const {ctx,w,h}=cone, l=+wl3.value, pad=28, x=v=>pad+(v-390)/310*(w-2*pad), y=v=>h-44-v*(h-70);
+  ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);
+  for(let v=390;v<=700;v++){ctx.fillStyle=rgbStr(wl2rgb(v));ctx.fillRect(x(v),h-36,Math.ceil((w-2*pad)/310)+1,10)}
+  ctx.fillStyle='#9b9cab';ctx.font='11px JetBrains Mono, monospace';ctx.textAlign='center';
+  [400,450,500,550,600,650,700].forEach(v=>ctx.fillText(v,x(v),h-12));
+  cones.forEach(c=>{
+    ctx.strokeStyle=c.c;ctx.lineWidth=2.5;ctx.beginPath();
+    for(let v=390;v<=700;v+=2){const yy=y(G(v,c.m,c.s));v===390?ctx.moveTo(x(v),yy):ctx.lineTo(x(v),yy)}
+    ctx.stroke();ctx.fillStyle=c.c;ctx.fillText(c.k,x(c.m),y(1)-6);
+  });
+  ctx.strokeStyle='#fff';ctx.setLineDash([4,4]);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x(l),18);ctx.lineTo(x(l),h-38);ctx.stroke();ctx.setLineDash([]);
+  const r=cones.map(c=>G(l,c.m,c.s));
+  r.forEach((v,i)=>{ctx.fillStyle=cones[i].c;ctx.beginPath();ctx.arc(x(l),y(v),5,0,7);ctx.fill()});
+  $('cS').textContent=Math.round(r[0]*100)+' %';$('cM').textContent=Math.round(r[1]*100)+' %';$('cL').textContent=Math.round(r[2]*100)+' %';
+  $('cCol').innerHTML=`<i class="swatch" style="background:${rgbStr(wl2rgb(l))}"></i> ${wlName(l)}`;
+}
+
+/* ---------- 4. additive ---------- */
+const addCv=$('addCv'); let add=fitCanvas(addCv);
+const aR=bindRange('aR',v=>v+' %',drawAdd),aG=bindRange('aG',v=>v+' %',drawAdd),aB=bindRange('aB',v=>v+' %',drawAdd),aS=bindRange('aS',v=>v+' %',drawAdd);
+function mixName(r,g,b){
+  const mx=Math.max(r,g,b); if(mx<8)return 'noir';
+  const n=[r,g,b].map(v=>v/mx>.75?1:v/mx>.3?.5:0);
+  const k=n.join(','), map={'1,0,0':'rouge','0,1,0':'vert','0,0,1':'bleu','1,1,0':'jaune','0,1,1':'cyan','1,0,1':'magenta','1,1,1':'blanc',
+  '1,0.5,0':'orange','1,0,0.5':'rose framboise','0.5,1,0':'vert lime','0,1,0.5':'vert d’eau','0.5,0,1':'violet','0,0.5,1':'bleu azur',
+  '1,1,0.5':'blanc chaud / jaune pâle','1,0.5,1':'rose','0.5,1,1':'cyan pâle','1,0.5,0.5':'rose saumon','0.5,1,0.5':'vert pâle','0.5,0.5,1':'bleu lavande'};
+  return (map[k]||'teinte mélangée')+(mx<120?' (sombre)':'');
+}
+function drawAdd(){
+  const {ctx,w,h}=add, R=+aR.value/100,Gg=+aG.value/100,B=+aB.value/100, s=+aS.value/100;
+  const rad=Math.min(w,h)*0.3, off=rad*0.9*s, cx=w/2, cy=h/2+8;
+  ctx.globalCompositeOperation='source-over';ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);
+  ctx.globalCompositeOperation='lighter';
+  const spots=[[R,0,0,-90],[0,Gg,0,150],[0,0,B,30]];
+  spots.forEach(([r,g,b,ang])=>{
+    const a=ang*Math.PI/180, x=cx+off*Math.cos(a), y=cy+off*Math.sin(a);
+    const gr=ctx.createRadialGradient(x,y,rad*.6,x,y,rad);
+    const c=`rgba(${Math.round(r*255)},${Math.round(g*255)},${Math.round(b*255)},`;
+    gr.addColorStop(0,c+'1)');gr.addColorStop(1,c+'0)');
+    ctx.fillStyle=gr;ctx.beginPath();ctx.arc(x,y,rad,0,7);ctx.fill();
+  });
+  ctx.globalCompositeOperation='source-over';
+  const v=[R,Gg,B].map(x=>Math.round(x*255));
+  $('aMix').innerHTML=`<i class="swatch" style="background:${rgbStr(v)}"></i> ${mixName(...v)}`;
+  $('aVal').textContent=v.join(' · ');
+}
+
+/* ---------- 5. couleur des objets ---------- */
+const objects=[
+  {n:'Tomate',r:[.85,.12,.08]},{n:'Citron',r:[.95,.85,.12]},{n:'Feuille',r:[.15,.6,.18]},
+  {n:'Tissu bleu',r:[.1,.22,.78],sq:1},{n:'Nappe blanche',r:[.92,.92,.92],sq:1},{n:'Velours noir',r:[.04,.04,.04],sq:1},{n:'Ballon cyan',r:[.08,.75,.8]}
+];
+$('objs').innerHTML=objects.map((o,i)=>`<div class="obj${o.sq?' sq':''}"><i id="ob${i}"></i>${o.n}</div>`).join('');
+const presets=[['Blanche',100,100,100],['Rouge',100,0,0],['Verte',0,100,0],['Bleue',0,0,100],['Jaune',100,100,0],['Cyan',0,100,100],['Magenta',100,0,100]];
+$('lightPresets').innerHTML=presets.map((p,i)=>`<button data-i="${i}">${p[0]}</button>`).join('');
+const oR=bindRange('oR',v=>v+' %',drawObj),oG=bindRange('oG',v=>v+' %',drawObj),oB=bindRange('oB',v=>v+' %',drawObj);
+$('lightPresets').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const p=presets[+b.dataset.i];
+  [oR,oG,oB].forEach((el,k)=>{el.value=p[k+1];el.dispatchEvent(new Event('input'))});});
+function drawObj(){
+  const L=[+oR.value,+oG.value,+oB.value].map(v=>v/100);
+  objects.forEach((o,i)=>{const c=o.r.map((r,k)=>Math.round(255*Math.pow(r*L[k],1/1.6)));$('ob'+i).style.background=rgbStr(c)});
+  [...$('lightPresets').children].forEach((b,i)=>{const p=presets[i];b.classList.toggle('on',p[1]==oR.value&&p[2]==oG.value&&p[3]==oB.value)});
+}
+
+/* ---------- 6. sphère ---------- */
+const sphCv=$('sphCv'); let sph=fitCanvas(sphCv);
+const sA=bindRange('sA',v=>v+'°',drawSph),sE=bindRange('sE',v=>v+'°',drawSph),sD=bindRange('sD',v=>v+' %',drawSph);
+$('sphPresets').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;sA.value=b.dataset.a;sE.value=b.dataset.e;
+  sA.dispatchEvent(new Event('input'));sE.dispatchEvent(new Event('input'));});
+let sphImg=null;
+function drawSph(){
+  const {ctx,w,h}=sph, az=+sA.value*Math.PI/180, el=+sE.value*Math.PI/180, soft=+sD.value/100;
+  const Lx=Math.sin(az)*Math.cos(el), Ly=-Math.sin(el), Lz=Math.cos(az)*Math.cos(el);
+  ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);
+  const R=Math.min(80,h*0.3), cx=w/2, cy=h*0.44, floorY=cy+R+6;
+  // sol
+  const fg=ctx.createLinearGradient(0,floorY,0,h);fg.addColorStop(0,'#26242a');fg.addColorStop(1,'#111');
+  ctx.fillStyle=fg;ctx.fillRect(0,floorY,w,h-floorY);
+  // ombre portée
+  if(el>0.05){
+    const lenK=Math.min(4,Math.cos(el)/Math.max(Math.sin(el),.15));
+    const dx=-Math.sin(az)*R*lenK, dz=-Math.cos(az)*R*lenK*0.35;
+    ctx.save();ctx.filter=`blur(${2+soft*14}px)`;
+    ctx.fillStyle=`rgba(0,0,0,${0.85-soft*0.45})`;
+    ctx.beginPath();ctx.ellipse(cx+dx*0.9,floorY+8-dz*0.4,R*(1+Math.abs(lenK)*0.35*Math.abs(Math.sin(az))),R*0.22,0,0,7);ctx.fill();ctx.restore();
+  }else if(el<0){
+    ctx.fillStyle='rgba(255,220,170,.06)';ctx.fillRect(0,floorY,w,h-floorY);
+  }
+  // sphère par pixel
+  const dpr=window.devicePixelRatio||1, S=Math.ceil(2*R*dpr), img=ctx.createImageData(S,S), d=img.data;
+  const wrap=soft*0.9, amb=0.03+soft*0.12;
+  for(let j=0;j<S;j++)for(let i=0;i<S;i++){
+    const nx=(i/S)*2-1, ny=(j/S)*2-1, r2=nx*nx+ny*ny, idx=(j*S+i)*4;
+    if(r2>1){d[idx+3]=0;continue}
+    const nz=Math.sqrt(1-r2), dot=nx*Lx+ny*Ly+nz*Lz;
+    let v=Math.max(0,(dot+wrap)/(1+wrap));
+    // spéculaire
+    const hz=Lz+1, hl=Math.hypot(Lx,Ly,hz), sp=Math.pow(Math.max(0,(nx*Lx+ny*Ly+nz*hz)/hl),40)*(1-soft)*0.6;
+    const c=amb+v*0.9;
+    d[idx]=Math.min(255,255*(c*0.86+sp));d[idx+1]=Math.min(255,255*(c*0.8+sp));d[idx+2]=Math.min(255,255*(c*0.74+sp));
+    d[idx+3]=Math.round(Math.min(1,(1-Math.sqrt(r2))*S*0.5)*255);
+  }
+  const off=document.createElement('canvas');off.width=S;off.height=S;off.getContext('2d').putImageData(img,0,0);
+  ctx.drawImage(off,cx-R,cy-R,2*R,2*R);
+  // icône projecteur
+  const px=cx+Math.sin(az)*Math.cos(el)*(R+70), py=cy-Math.sin(el)*(R+55), behind=Math.cos(az)<0;
+  ctx.globalAlpha=behind?0.45:1;ctx.fillStyle='#ffb547';ctx.beginPath();ctx.arc(Math.max(12,Math.min(w-12,px)),Math.max(12,Math.min(h-12,py)),7,0,7);ctx.fill();ctx.globalAlpha=1;
+  ctx.fillStyle='#9b9cab';ctx.font='11px JetBrains Mono, monospace';ctx.textAlign='left';
+  ctx.fillText(behind?'projecteur derrière l’objet':'projecteur côté public',10,18);
+}
+
+/* ---------- 7. température ---------- */
+function k2rgb(K){
+  const t=K/100; let r,g,b;
+  r=t<=66?255:329.698727446*Math.pow(t-60,-0.1332047592);
+  g=t<=66?99.4708025861*Math.log(t)-161.1195681661:288.1221695283*Math.pow(t-60,-0.0755148492);
+  b=t>=66?255:t<=19?0:138.5177312231*Math.log(t-10)-305.0447927307;
+  return [r,g,b].map(v=>Math.max(0,Math.min(255,v)));
+}
+const tObjs=[{n:'Nappe blanche',r:[.92,.92,.9],sq:1},{n:'Peau',r:[.88,.66,.54]},{n:'Robe rouge',r:[.78,.1,.12]},{n:'Rideau bleu',r:[.15,.25,.7],sq:1},{n:'Plante',r:[.2,.55,.22]}];
+$('tScene').innerHTML=tObjs.map((o,i)=>`<div class="obj${o.sq?' sq':''}"><i id="tb${i}"></i>${o.n}</div>`).join('');
+const tK=bindRange('tK',v=>fr(v)+' K',drawT),tAd=bindRange('tAd',v=>v+' %'+(v===0?' · aucune':v===100?' · totale':''),drawT);
+$('tPresets').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;tK.value=b.dataset.k;tK.dispatchEvent(new Event('input'))});
+function drawT(){
+  const K=+tK.value, ad=+tAd.value/100, L=k2rgb(K).map(v=>Math.max(v,12)/255);
+  // 0 % : la dominante de la source reste visible ; 100 % : elle est entièrement corrigée (la nappe redevient blanche)
+  const mx=Math.max(...L), comp=L.map(v=>Math.max(1e-3,(1-ad)*mx+ad*v));
+  const eff=L.map((v,k)=>Math.min(1,v/comp[k]*mx));
+  tObjs.forEach((o,i)=>{$('tb'+i).style.background=rgbStr(o.r.map((r,k)=>Math.round(255*Math.min(1,r*eff[k]))))});
+  $('tSw').style.background=rgbStr(L.map(v=>Math.round(v*255)));
+  $('tName').textContent=K<3300?'chaude (orangée)':K<5000?'neutre':K<7000?'lumière du jour':'froide (bleutée)';
+  [...$('tPresets').children].forEach(b=>b.classList.toggle('on',+b.dataset.k===K));
+}
+
+/* ---------- 8. photométrie ---------- */
+const pF=bindRange('pF',v=>fr(v)+' lm',drawPh),pA=bindRange('pA',v=>v+'°',drawPh),pD=bindRange('pD',v=>fr(v,v%1?1:0)+' m',drawPh);
+const luxCv=$('luxCv'); let lux=fitCanvas(luxCv); let curE=0;
+const refs=[[0.2,'pleine lune'],[20,'rue la nuit'],[150,'salon'],[500,'bureau'],[2000,'stand / vitrine'],[10000,'ciel couvert'],[100000,'plein soleil']];
+function fmtNum(n){return n>=100?fr(Math.round(n)):n>=10?fr(n,1):fr(n,2)}
+function drawPh(){
+  const F=+pF.value, A=+pA.value, D=+pD.value;
+  const omega=2*Math.PI*(1-Math.cos(A/2*Math.PI/180));
+  const I=F/omega, E=I/(D*D), dia=2*D*Math.tan(A/2*Math.PI/180);
+  curE=E;
+  $('pI').textContent=fr(Math.round(I))+' cd';
+  $('pE').textContent=fmtNum(E)+' lx';
+  $('pDia').textContent=fr(dia,dia<10?2:1)+' m';
+  let best=refs[0];refs.forEach(r=>{if(Math.abs(Math.log10(r[0])-Math.log10(E))<Math.abs(Math.log10(best[0])-Math.log10(E)))best=r});
+  $('pCmp').textContent=best[1];
+  // SVG profil
+  const W=640,H=260, x0=40, half=dia/2, sc=Math.min(540/D,105/Math.max(half,.01)), xs=x0+D*sc, hy=half*sc, cy=130;
+  const op=Math.max(.12,Math.min(.85,Math.log10(E+1)/4.5));
+  $('phSvg').innerHTML=`
+   <defs><linearGradient id="bm" x1="0" x2="1"><stop offset="0" stop-color="#ffd38a" stop-opacity="${op}"/><stop offset="1" stop-color="#ffb547" stop-opacity="${op*0.55}"/></linearGradient></defs>
+   <rect width="${W}" height="${H}" fill="#000"/>
+   <polygon points="${x0},${cy} ${xs},${cy-hy} ${xs},${cy+hy}" fill="url(#bm)"/>
+   <rect x="${x0-22}" y="${cy-11}" width="24" height="22" rx="3" fill="#ffb547"/>
+   <line x1="${xs}" y1="${cy-118}" x2="${xs}" y2="${cy+118}" stroke="#9b9cab" stroke-width="3"/>
+   <line x1="${x0}" y1="${cy+124}" x2="${xs}" y2="${cy+124}" stroke="#9b9cab"/>
+   <text x="${(x0+xs)/2}" y="${cy+120}" fill="#ebe7df" font-family="JetBrains Mono, monospace" font-size="12" text-anchor="middle">d = ${fr(D,D%1?1:0)} m</text>
+   <text x="${Math.min(xs-6,W-6)}" y="${Math.max(16,cy-hy-6)}" fill="#ebe7df" font-family="JetBrains Mono, monospace" font-size="12" text-anchor="end">⌀ ${fr(dia,dia<10?2:1)} m · ${fmtNum(E)} lx</text>
+`;
+  drawLux();
+}
+function drawLux(){
+  const {ctx,w,h}=lux, lo=-1, hi=5.2, x=v=>14+(Math.log10(v)-lo)/(hi-lo)*(w-28);
+  ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);
+  const g=ctx.createLinearGradient(14,0,w-14,0);g.addColorStop(0,'#15161c');g.addColorStop(1,'#ffe2a8');
+  ctx.fillStyle=g;ctx.fillRect(14,36,w-28,10);
+  ctx.font='10px JetBrains Mono, monospace';ctx.textAlign='center';
+  refs.forEach(([v,n],i)=>{ctx.fillStyle='#9b9cab';ctx.fillRect(x(v),46,1,6);ctx.fillText(v>=1000?fr(v/1000)+' k':fr(v,v<1?1:0),x(v),64);
+    if(w>520||i%2===0)ctx.fillText(n,x(v),78)});
+  ctx.fillText('lux (échelle logarithmique)',w/2,14);
+  const xe=x(Math.max(0.1,Math.min(150000,curE)));
+  ctx.fillStyle='#ffb547';ctx.beginPath();ctx.moveTo(xe,34);ctx.lineTo(xe-6,22);ctx.lineTo(xe+6,22);ctx.fill();
+}
+
+/* ---------- quiz ---------- */
+const Q=[
+ ['Quelle lumière transporte le plus d’énergie par photon ?',['Rouge 700 nm','Vert 530 nm','Violet 400 nm','Infrarouge 900 nm'],2,'étape 2'],
+ ['Un costume rouge éclairé uniquement en lumière verte paraît…',['rouge','vert','jaune','presque noir'],3,'étape 5'],
+ ['En synthèse additive, rouge + vert donne…',['marron','jaune','blanc','cyan'],1,'étape 4'],
+ ['Une source à 2 700 K est perçue comme…',['froide, bleutée','chaude, orangée','parfaitement neutre','invisible'],1,'étape 7'],
+ ['À lumens égaux, si on ferme l’angle du faisceau…',['les candelas augmentent','les lumens augmentent','les lux diminuent','rien ne change'],0,'étape 8'],
+ ['Un projecteur donne 400 lx à 5 m. À 10 m, dans le même axe :',['200 lx','100 lx','800 lx','400 lx'],1,'étape 8'],
+ ['Les cellules de la rétine qui permettent de voir les couleurs sont…',['les bâtonnets','les cônes','les photons','les pupilles'],1,'étape 3']
+];
+$('quiz').innerHTML=Q.map((q,i)=>`<div class="q" id="q${i}"><p>${i+1}. ${q[0]}</p>${q[1].map((a,j)=>`<label><input type="radio" name="qq${i}" value="${j}"> ${a}</label>`).join('')}<div class="fb"></div></div>`).join('');
+$('quizBtn').onclick=()=>{let s=0;Q.forEach((q,i)=>{const c=document.querySelector(`input[name=qq${i}]:checked`),fb=$('q'+i).querySelector('.fb');
+  if(!c){fb.className='fb bad';fb.textContent='Pas de réponse.';return}
+  if(+c.value===q[2]){s++;fb.className='fb good';fb.textContent='Correct.'}else{fb.className='fb bad';fb.textContent='À revoir : '+q[3]+'.'}});
+  $('quizScore').textContent=`${s} / ${Q.length}. `+(s>=6?'Vous êtes prêt·e pour le QCM Pronote.':'Relisez les étapes indiquées avant le QCM Pronote.');};
+
+/* ---------- carnet ---------- */
+const titles=['R1 Onde et particule','R2 UV et IR','R3 Daltonisme','R4 Additif / soustractif','R5 Métamérisme','R6 Trois points','R7 Mélange de sources, IRC','R8 Fiche technique'];
+for(let i=1;i<=8;i++){const ta=$('r'+i);try{const v=localStorage.getItem('lum-r'+i);if(v)ta.value=v}catch(e){}
+  ta.addEventListener('input',()=>{try{localStorage.setItem('lum-r'+i,ta.value)}catch(e){}})}
+$('copyBtn').onclick=()=>{
+  const txt='Carnet de recherche · La lumière\n\n'+titles.map((t,i)=>t+'\n'+($('r'+(i+1)).value.trim()||'(vide)')).join('\n\n');
+  const out=$('carnetOut');out.value=txt;
+  const fallback=()=>{out.hidden=false;out.focus();out.select();$('copyMsg').textContent='Sélectionnez le texte ci-dessus et copiez-le (Ctrl+C).'};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(()=>{$('copyMsg').textContent='Carnet copié. Collez-le dans votre document de notes.'},fallback)}else fallback();
+};
+
+drawSpec();drawCone();drawAdd();drawObj();drawSph();drawT();drawPh();
+
+/* ---------- nav active ---------- */
+const links=[...document.querySelectorAll('nav.cue a')];
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id))}}),{rootMargin:'-40% 0px -55% 0px'});
+document.querySelectorAll('section.mem').forEach(s=>io.observe(s));
+
+/* ---------- redimensionnement ---------- */
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{
+  wave=fitCanvas(waveCv);spec=fitCanvas(specCv);cone=fitCanvas(coneCv);add=fitCanvas(addCv);sph=fitCanvas(sphCv);lux=fitCanvas(luxCv);
+  drawWave();drawSpec();drawCone();drawAdd();drawSph();drawLux();},150)});
+})();
+</script>
